@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MagnifyingGlass, SquaresFour, List, SortAscending, SortDescending } from '@phosphor-icons/react';
+import { MagnifyingGlass, SquaresFour, List, SortAscending, SortDescending, FolderPlus } from '@phosphor-icons/react';
 import { useMenuTree } from '@/features/menus/hooks/useMenuTree';
 import { findNodeById, getAncestorPath } from '@/features/menus/lib/find-node';
 import { Breadcrumb } from '@/features/menus/components/Breadcrumb';
 import { MapCard } from '@/features/menus/components/MapCard';
 import { BerkasCard } from '@/features/menus/components/BerkasCard';
+import { CreateMapDialog } from '@/features/menus/components/CreateMapDialog';
+import { useCanEdit } from '@/features/auth/hooks/useCanEdit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -23,9 +25,11 @@ export default function ContentPage() {
   const navigate = useNavigate();
   const { data: tree, isLoading, isError } = useMenuTree();
 
+  const canEdit = useCanEdit();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const node = useMemo(
     () => (menuId && tree ? findNodeById(tree, menuId) : undefined),
@@ -108,14 +112,28 @@ export default function ContentPage() {
     <div className="flex flex-col gap-6 p-8">
       <Breadcrumb path={ancestorPath} />
 
-      <h1 className="text-xl font-semibold text-[var(--foreground)]">{node.name}</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-xl font-semibold text-[var(--foreground)]">{node.name}</h1>
+        {canEdit && (
+          <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <FolderPlus size={14} />
+            Tambah Map
+          </Button>
+        )}
+      </div>
 
       {isEmpty ? (
-        <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <p className="text-sm font-medium text-[var(--foreground)]">Belum ada isi</p>
           <p className="text-xs text-[var(--muted-foreground)]">
             Map ini belum memiliki sub-map atau berkas.
           </p>
+          {canEdit && (
+            <Button size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
+              <FolderPlus size={14} />
+              Tambah Map
+            </Button>
+          )}
         </div>
       ) : (
         <>
@@ -216,6 +234,12 @@ export default function ContentPage() {
           )}
         </>
       )}
+
+      <CreateMapDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        parentId={menuId ?? null}
+      />
     </div>
   );
 }

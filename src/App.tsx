@@ -1,12 +1,16 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import { FolderPlus } from '@phosphor-icons/react';
 import { AuthGate } from '@/features/auth/components/AuthGate';
 import { RequireAuth } from '@/features/auth/components/RequireAuth';
 import { RedirectIfAuthed } from '@/features/auth/components/RedirectIfAuthed';
 import { AppShell } from '@/components/layout/AppShell';
 import { useMenuTree } from '@/features/menus/hooks/useMenuTree';
+import { useCanEdit } from '@/features/auth/hooks/useCanEdit';
+import { CreateMapDialog } from '@/features/menus/components/CreateMapDialog';
+import { Button } from '@/components/ui/button';
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const ContentPage = lazy(() => import('@/features/menus/pages/ContentPage'));
@@ -16,6 +20,8 @@ const queryClient = new QueryClient();
 
 function HomePage() {
   const { data: tree, isLoading } = useMenuTree();
+  const canEdit = useCanEdit();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -27,12 +33,21 @@ function HomePage() {
 
   if (tree && tree.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
-        <p className="text-sm font-medium text-[var(--foreground)]">Belum ada map</p>
-        <p className="text-xs text-[var(--muted-foreground)]">
-          Buat map pertama untuk mulai menyimpan berkas.
-        </p>
-      </div>
+      <>
+        <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+          <p className="text-sm font-medium text-[var(--foreground)]">Belum ada map</p>
+          <p className="text-xs text-[var(--muted-foreground)]">
+            Buat map pertama untuk mulai menyimpan berkas.
+          </p>
+          {canEdit && (
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <FolderPlus size={14} />
+              Buat Map
+            </Button>
+          )}
+        </div>
+        <CreateMapDialog open={dialogOpen} onOpenChange={setDialogOpen} parentId={null} />
+      </>
     );
   }
 
