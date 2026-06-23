@@ -7,12 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Card,
-  CardHeader,
-  CardContent,
-} from '@/components/ui/card';
-import type { UseLoginReturn } from '@/features/auth/hooks/useLogin';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 const schema = z.object({
   username: z.string().min(1, 'Nama pengguna wajib diisi'),
@@ -21,14 +16,20 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-interface LoginFormProps {
-  onSubmit: UseLoginReturn['submit'];
-  isLoading: UseLoginReturn['isLoading'];
-  loginError: UseLoginReturn['loginError'];
-  onFieldChange: UseLoginReturn['clearError'];
+export interface LoginFormValues {
+  username: string;
+  password: string;
+  rememberMe: boolean;
 }
 
-export function LoginForm({ onSubmit, isLoading, loginError, onFieldChange }: LoginFormProps) {
+export interface LoginFormProps {
+  onSubmit: (values: LoginFormValues) => void;
+  isPending: boolean;
+  errorMessage?: string | null;
+  hasFieldError?: boolean;
+}
+
+export function LoginForm({ onSubmit, isPending, errorMessage, hasFieldError }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -40,21 +41,13 @@ export function LoginForm({ onSubmit, isLoading, loginError, onFieldChange }: Lo
     resolver: zodResolver(schema),
   });
 
-  const hasCredentialError = loginError === 'credentials';
-  const hasRateLimitError = loginError === 'rate-limited';
-
-  const fieldErrorClass = hasCredentialError
+  const fieldErrorClass = hasFieldError
     ? 'border-[var(--destructive)] focus-visible:ring-[var(--destructive)]'
     : '';
-
-  const handleChange = () => {
-    if (loginError) onFieldChange();
-  };
 
   return (
     <Card className="w-full max-w-sm mx-auto">
       <CardHeader className="items-center text-center gap-3 pb-2">
-        {/* Logo */}
         <div
           className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg-val)] bg-[var(--primary)] text-[var(--primary-foreground)] text-xl font-bold select-none"
           aria-hidden="true"
@@ -73,7 +66,9 @@ export function LoginForm({ onSubmit, isLoading, loginError, onFieldChange }: Lo
 
       <CardContent>
         <form
-          onSubmit={handleSubmit((vals) => onSubmit(vals.username, vals.password))}
+          onSubmit={handleSubmit((vals) =>
+            onSubmit({ username: vals.username, password: vals.password, rememberMe }),
+          )}
           className="space-y-4"
           noValidate
         >
@@ -85,9 +80,10 @@ export function LoginForm({ onSubmit, isLoading, loginError, onFieldChange }: Lo
               type="text"
               placeholder="Masukkan nama pengguna"
               autoComplete="username"
-              aria-invalid={!!(errors.username || hasCredentialError)}
+              disabled={isPending}
+              aria-invalid={!!(errors.username || hasFieldError)}
               className={fieldErrorClass}
-              {...register('username', { onChange: handleChange })}
+              {...register('username')}
             />
             {errors.username && (
               <p className="text-xs text-[var(--destructive)]">{errors.username.message}</p>
@@ -103,9 +99,10 @@ export function LoginForm({ onSubmit, isLoading, loginError, onFieldChange }: Lo
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Masukkan kata sandi"
                 autoComplete="current-password"
-                aria-invalid={!!(errors.password || hasCredentialError)}
+                disabled={isPending}
+                aria-invalid={!!(errors.password || hasFieldError)}
                 className={`pr-9 ${fieldErrorClass}`}
-                {...register('password', { onChange: handleChange })}
+                {...register('password')}
               />
               <button
                 type="button"
@@ -121,19 +118,12 @@ export function LoginForm({ onSubmit, isLoading, loginError, onFieldChange }: Lo
             )}
           </div>
 
-          {/* Inline error from API */}
-          {hasCredentialError && (
-            <p className="text-sm font-medium text-[var(--destructive)]">
-              Data yang anda masukkan salah
-            </p>
-          )}
-          {hasRateLimitError && (
-            <p className="text-sm font-medium text-[var(--destructive)]">
-              Terlalu banyak percobaan, coba lagi nanti.
-            </p>
+          {/* Error message dari luar (mis. 401 atau 429) */}
+          {errorMessage && (
+            <p className="text-sm font-medium text-[var(--destructive)]">{errorMessage}</p>
           )}
 
-          {/* Remember me — dekoratif (tanpa efek persist token) */}
+          {/* Tetap masuk — dekoratif (tanpa efek persist token) */}
           <div className="flex items-center gap-2">
             <Checkbox
               id="rememberMe"
@@ -147,8 +137,8 @@ export function LoginForm({ onSubmit, isLoading, loginError, onFieldChange }: Lo
           </div>
 
           {/* Submit */}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? (
               <>
                 <CircleNotch size={16} className="animate-spin" />
                 Memproses…

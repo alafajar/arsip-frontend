@@ -33,6 +33,24 @@ shadcn, lalu bangun layar login yang tersambung ke endpoint nyata `POST /auth/lo
 
 ---
 
+## PATCH (setelah FE-004) — LoginForm jadi presentasional murni
+
+Revisi keputusan arsitektur: wiring login (panggil endpoint + navigasi + mapping error HTTP)
+**dikeluarkan dari `LoginForm`** dan dipindah ke `LoginPage` (via `useLogin` hook). Ini menegakkan
+prinsip form = render, hook = logika.
+
+**Perubahan:**
+- `LoginForm` props: `{ onSubmit, isPending, errorMessage?, hasFieldError? }` — tidak ada impor
+  `useLogin`, `auth.api`, store, atau `navigate` di komponen ini.
+- `LoginPage` melakukan mapping: `loginError → errorMessage` string, `loginError === 'credentials' → hasFieldError`.
+- `useLogin.ts` tidak berubah — tetap menyediakan logika dan dipanggil dari `LoginPage`.
+
+**Alasan:** Komponen form yang tidak tahu soal HTTP bisa dirender mandiri (Storybook, test) dengan
+data apapun lewat props. Pemisahan ini juga membuat mock/test lebih mudah: cukup pass `onSubmit`
+no-op tanpa perlu mock axios.
+
+---
+
 ## Keputusan kunci
 
 1. **Token diterjemahkan ke format v4/shadcn** — `@theme inline` + CSS variables standar (`--background`,
