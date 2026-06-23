@@ -89,6 +89,8 @@ sebagai shell visual saja:
   dari arsip" + toggle Dokumen Internal, ukuran/jenis file & "Tanggal diunggah" per berkas,
   "Cari di Map/Berkas", "Olah tabel", sort by Ukuran/Jenis.
 - DTPS asli **24 baris** (mock "2000 data" di wireframe diabaikan; pagination digerakkan `total`).
+- **Grid-mirror (read-only) sheet** (import `.xlsx` apa adanya, `isReadOnly`) render setia ala Excel =
+  **di luar scope Sprint 1** — butuh backend ekspos `CellMerge`. Detail: `sprint2-backend-needs.md` #9.
 
 ## 6. Roadmap stage frontend
 | Stage | Isi | Status |
@@ -105,6 +107,10 @@ sebagai shell visual saja:
 
 ## 7. Item terbuka / utang
 - `fullName` tak ada di `/me` — opsional minta backend menambah; sementara fallback username.
+- **Grid-mirror (read-only) sheet** render apa adanya (kolom flat `A`–`I` + header Excel tampil
+  sebagai baris data) karena backend belum mengekspos `CellMerge` (sudah disimpan saat import, belum
+  di response). Render setia Excel = Sprint 2; detail di `sprint2-backend-needs.md` #9. DTPS
+  (engine-table) **tidak terdampak** — sudah benar lewat pohon kolom.
 - Sprint 2: OpenAPI/Swagger di backend → generate tipe FE (hapus langkah paste response manual).
 - Sprint 2: pertimbangkan monorepo agar FE/BE saling melengkapi dalam satu sesi Claude Code.
 

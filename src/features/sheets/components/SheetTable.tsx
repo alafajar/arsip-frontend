@@ -71,7 +71,6 @@ export function SheetTable({ sheetId, columns }: SheetTableProps) {
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    rowSpan={header.rowSpan}
                     scope={header.colSpan > 1 ? 'colgroup' : 'col'}
                     className="border-b border-r border-[var(--border)] px-3 py-2 text-left text-xs font-semibold text-[var(--muted-foreground)] last:border-r-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                   >

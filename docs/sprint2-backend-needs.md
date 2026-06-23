@@ -117,3 +117,39 @@ Internal". Di Sprint 1 dekoratif (state lokal saja, tanpa filter API).
 
 **Endpoint dibutuhkan:**
 - `GET /files?sortBy=size|mimeType|uploadedAt&order=asc|desc`
+
+---
+
+## 9. Render Setia Grid-mirror (Read-only) Sheet — Ekspos CellMerge
+
+**Fitur:** Render setia sheet grid-mirror (`isReadOnly: true`, hasil import `.xlsx` apa adanya) —
+header merge bertingkat ala Excel (mis. "Jumlah Calon Mahasiswa" membentang di atas
+Pendaftar+Lulus Seleksi). Beda dari sheet DTPS (engine-table) yang sudah benar karena punya pohon
+kolom asli.
+
+**Status Sprint 1:** Grid-mirror sheet render apa adanya — kolom flat huruf `A`–`I` (semua `TEXT`,
+tanpa hierarki), dan "header" Excel tampil sebagai baris data biasa + sel kosong `—`. Bukan bug
+per-sheet; ini fitur yang ditunda (lihat FE-008 "Yang TIDAK dikerjakan").
+
+**Catatan kunci (akar masalah):** Merge metadata SUDAH disimpan backend di tabel `CellMerge`
+(`startRow/endRow/startCol/endCol`) saat import (`arsip-backend → imports.service.ts → parseGridSheet`),
+tetapi BELUM diekspos di response API mana pun (`GET /sheets/:id`, `/columns`, `/rows` tidak
+mengembalikan merge). Tanpa data ini FE tidak bisa merekonstruksi layout — bukan masalah render FE,
+tapi data yang dibutuhkan tidak dikirim.
+
+**Endpoint dibutuhkan (pilih salah satu):**
+- `GET /sheets/:id/merges` — daftar range merge, ATAU
+- tambahkan field `merges` pada response `GET /sheets/:id` atau `GET /sheets/:id/rows`.
+
+**Bentuk data (usulan):**
+```ts
+interface CellMerge {
+  startRow: number; endRow: number;   // 0-based row index (selaras orderIndex baris)
+  startCol: number; endCol: number;   // 0-based col index (urutan kolom A, B, C…)
+}
+```
+
+**Kebutuhan FE saat data tersedia:** untuk sheet `isReadOnly`, render grid dengan colSpan/rowSpan
+dari merge ranges; sembunyikan header huruf `A`–`I`; jangan tampilkan sel "merged-away" sebagai `—`.
+Konsumen: `src/features/sheets/components/SheetTable.tsx` (+ transform di
+`src/features/sheets/lib/columns-to-coldef.tsx`).
