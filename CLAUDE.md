@@ -78,3 +78,18 @@ Cookie httpOnly `refreshToken` dikirim otomatis (`withCredentials: true`).
 ## Format Task Log
 Simpan di `docs/tasks/FE-XXX-nama.md`.
 Bagian wajib: Tujuan / Rencana / File diubah / Keputusan kunci / Belajar dari sini.
+
+## Kebijakan Mock (Sprint 1 → Sprint 2)
+
+Fitur yang belum punya backend **WAJIB** dibangun di balik interface yang sama dengan API asli nanti:
+```
+features/<x>/api/<x>.api.ts   ← ekspor fungsi async (baca/tulis sessionStorage sementara)
+```
+
+Aturan:
+1. Tandai setiap baris mock dengan komentar `// MOCK(sprint2)`.
+2. **Simpan metadata, bukan byte file** — sessionStorage hanya string, batas ~5MB.
+   Untuk upload: simpan `{ id, name, size, mimeType, uploadedAt }`.
+3. Setiap mock **wajib** punya entri di `docs/sprint2-backend-needs.md`.
+4. **Login BUKAN mock** — `POST /auth/login` tersambung ke endpoint nyata sejak FE-003.
+5. Saat backend siap, cukup ganti implementasi satu file — konsumen tidak berubah.
