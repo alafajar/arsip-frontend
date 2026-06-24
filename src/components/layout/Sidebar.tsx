@@ -1,25 +1,36 @@
-import { useState } from 'react';
-import { useMatch, useNavigate } from 'react-router-dom';
-import { FolderOpen, FolderPlus } from '@phosphor-icons/react';
-import { useMenuTree } from '@/features/menus/hooks/useMenuTree';
-import { MenuTree } from '@/features/menus/components/MenuTree';
-import { UserChip } from '@/components/layout/UserChip';
-import { CreateMapDialog } from '@/features/menus/components/CreateMapDialog';
-import { RenameMapDialog } from '@/features/menus/components/RenameMapDialog';
-import { DeleteMapDialog } from '@/features/menus/components/DeleteMapDialog';
-import { useCanEdit } from '@/features/auth/hooks/useCanEdit';
-import { useRenameMenu } from '@/features/menus/hooks/useRenameMenu';
-import { useDeleteMenu } from '@/features/menus/hooks/useDeleteMenu';
-import { getAncestorPath } from '@/features/menus/lib/find-node';
-import type { MenuNode } from '@/types/api';
+import { useState } from "react";
+import { useMatch, useNavigate } from "react-router-dom";
+import {
+  SquaresFour,
+  Archive,
+  FolderOpen,
+  FolderPlus,
+  Plus,
+} from "@phosphor-icons/react";
+import { useMenuTree } from "@/features/menus/hooks/useMenuTree";
+import { MenuTree } from "@/features/menus/components/MenuTree";
+import { UserChip } from "@/components/layout/UserChip";
+import { CreateMapDialog } from "@/features/menus/components/CreateMapDialog";
+import { RenameMapDialog } from "@/features/menus/components/RenameMapDialog";
+import { DeleteMapDialog } from "@/features/menus/components/DeleteMapDialog";
+import { useCanEdit } from "@/features/auth/hooks/useCanEdit";
+import { useRenameMenu } from "@/features/menus/hooks/useRenameMenu";
+import { useDeleteMenu } from "@/features/menus/hooks/useDeleteMenu";
+import { getAncestorPath } from "@/features/menus/lib/find-node";
+import type { MenuNode } from "@/types/api";
 
-interface RenameTarget { node: MenuNode; parentId: string | null }
-interface DeleteTarget { node: MenuNode }
+interface RenameTarget {
+  node: MenuNode;
+  parentId: string | null;
+}
+interface DeleteTarget {
+  node: MenuNode;
+}
 
 function MenuSkeleton() {
   return (
-    <div className="animate-pulse space-y-2 px-1">
-      {[60, 80, 50].map((w) => (
+    <div className="animate-pulse space-y-1 py-1">
+      {[65, 80, 55].map((w) => (
         <div
           key={w}
           className="h-7 rounded-[var(--radius)] bg-[var(--sidebar-border)]"
@@ -30,16 +41,24 @@ function MenuSkeleton() {
   );
 }
 
-function SectionLabel({ children }: { children: string }) {
+/** Nav-row-styled section header matching the design screenshots */
+function SectionHeader({
+  icon: Icon,
+  label,
+}: {
+  icon: React.ElementType;
+  label: string;
+}) {
   return (
-    <h2 className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-      {children}
-    </h2>
+    <div className="flex items-center gap-2 py-1.5 text-base text-zinc-950">
+      <Icon size={14} className="shrink-0" />
+      <span className="font-medium">{label}</span>
+    </div>
   );
 }
 
 export function Sidebar() {
-  const match = useMatch('/konten/:menuId');
+  const match = useMatch("/konten/:menuId");
   const activeMenuId = match?.params.menuId ?? null;
   const navigate = useNavigate();
 
@@ -56,7 +75,11 @@ export function Sidebar() {
   const handleToggle = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } else { next.add(id); }
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -83,11 +106,9 @@ export function Sidebar() {
     deleteMutation.mutate(deletedId, {
       onSuccess: () => {
         setDeleteTarget(null);
-        // Navigate away if deleted node is active or an ancestor of active
         if (activeMenuId && tree) {
           const path = getAncestorPath(tree, activeMenuId);
-          const isActiveOrAncestor = path.some((n) => n.id === deletedId);
-          if (isActiveOrAncestor) navigate('/');
+          if (path.some((n) => n.id === deletedId)) navigate("/");
         }
       },
     });
@@ -100,7 +121,9 @@ export function Sidebar() {
         <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius)] bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-bold select-none">
           W
         </div>
-        <span className="text-sm font-semibold text-[var(--sidebar-foreground)]">Wreksa</span>
+        <span className="text-sm font-semibold text-[var(--sidebar-foreground)]">
+          Wreksa
+        </span>
       </div>
 
       {/* Scrollable nav */}
@@ -109,11 +132,11 @@ export function Sidebar() {
         className="flex-1 space-y-4 overflow-y-auto px-3 pb-3"
       >
         {/* Section: Konten */}
-        <div>
-          <SectionLabel>Konten</SectionLabel>
+        <div className="space-y-0.5">
+          <SectionHeader icon={SquaresFour} label="Konten" />
           {isLoading && <MenuSkeleton />}
           {isError && (
-            <p className="px-3 py-2 text-xs text-[var(--destructive)]">
+            <p className="py-1 text-xs text-[var(--destructive)]">
               Gagal memuat menu.
             </p>
           )}
@@ -132,21 +155,21 @@ export function Sidebar() {
             <button
               type="button"
               onClick={() => setCreateOpen(true)}
-              className="mt-1 flex w-full items-center gap-2 rounded-[var(--radius)] px-3 py-1.5 text-left text-sm text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+              className="flex w-full items-center gap-2 rounded-[var(--radius)] py-1.5 pl-7 pr-2 text-sm text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
             >
-              <FolderPlus size={14} />
-              + Map Baru
+              <Plus size={14} />
+              Map Baru
             </button>
           )}
         </div>
 
         {/* Section: Arsip */}
-        <div>
-          <SectionLabel>Arsip</SectionLabel>
-          {(['Berkas Saya', 'Dibagikan'] as const).map((label) => (
+        <div className="space-y-0.5">
+          <SectionHeader icon={Archive} label="Arsip" />
+          {(["Berkas Saya", "Dibagikan"] as const).map((label) => (
             <div
               key={label}
-              className="flex cursor-default items-center gap-2 rounded-[var(--radius)] px-3 py-1.5 text-sm text-[var(--sidebar-foreground)] opacity-50"
+              className="flex cursor-default items-center gap-2 rounded-[var(--radius)] py-1.5 pl-2 text-sm text-[var(--sidebar-foreground)] opacity-50"
               aria-disabled="true"
             >
               <FolderOpen size={14} />
@@ -155,16 +178,14 @@ export function Sidebar() {
           ))}
           {/* MOCK(sprint2) — dekoratif, belum terhubung ke API */}
           <div
-            className="flex cursor-default items-center gap-2 rounded-[var(--radius)] px-3 py-1.5 text-sm text-[var(--muted-foreground)] opacity-40"
+            className="flex cursor-default items-center gap-2 rounded-[var(--radius)] py-1.5 pl-2 text-sm text-[var(--muted-foreground)] opacity-40"
             aria-disabled="true"
           >
-            <FolderPlus size={14} />
-            + Arsip Baru
+            <FolderPlus size={14} />+ Arsip Baru
           </div>
         </div>
       </nav>
 
-      {/* User chip + logout */}
       <UserChip />
 
       <CreateMapDialog
@@ -175,16 +196,20 @@ export function Sidebar() {
 
       <RenameMapDialog
         open={renameTarget !== null}
-        onOpenChange={(open) => { if (!open) setRenameTarget(null); }}
-        initialName={renameTarget?.node.name ?? ''}
+        onOpenChange={(open) => {
+          if (!open) setRenameTarget(null);
+        }}
+        initialName={renameTarget?.node.name ?? ""}
         isPending={renameMutation.isPending}
         onConfirm={handleRenameConfirm}
       />
 
       <DeleteMapDialog
         open={deleteTarget !== null}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        mapName={deleteTarget?.node.name ?? ''}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        mapName={deleteTarget?.node.name ?? ""}
         isPending={deleteMutation.isPending}
         onConfirm={handleDeleteConfirm}
       />

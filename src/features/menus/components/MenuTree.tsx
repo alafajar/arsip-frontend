@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { CaretRight, CaretDown, PencilSimple, Trash } from '@phosphor-icons/react';
+import { CaretRight, CaretDown, FolderSimple, PencilSimple, Trash } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import type { MenuNode } from '@/types/api';
 
@@ -24,64 +24,81 @@ function MenuNodeItem({
   const isExpanded = expandedIds.has(node.id);
   const isActive = activeMenuId === node.id;
 
+  const accentFg = 'text-[var(--sidebar-accent-foreground)]';
+  const mutedFg = 'text-[var(--muted-foreground)]';
+
   return (
     <li>
-      <div
-        className={cn(
-          'group flex items-center rounded-[var(--radius)]',
-          isActive ? 'bg-[var(--sidebar-accent)]' : 'hover:bg-[var(--muted)]',
+      {/* Wrapper isolates the left-bar to the row height only, not children */}
+      <div className="relative">
+        {isActive && (
+          <span aria-hidden="true" className="absolute left-0 inset-y-0 w-0.5 bg-[var(--primary)]" />
         )}
-        style={{ paddingLeft: `${depth * 0.75}rem` }}
-      >
-        {hasChildren ? (
+        <div
+          className={cn(
+            'group flex items-center rounded-[var(--radius)]',
+            isActive ? 'bg-[var(--sidebar-accent)]' : 'hover:bg-[var(--muted)]',
+          )}
+          style={{ paddingLeft: `${depth * 0.75}rem` }}
+        >
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={() => onToggle(node.id)}
+              aria-expanded={isExpanded}
+              aria-label={`${isExpanded ? 'Tutup' : 'Buka'} ${node.name}`}
+              className={cn(
+                'shrink-0 rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
+                'hover:bg-[var(--sidebar-border)]',
+                isActive ? accentFg : mutedFg,
+              )}
+            >
+              {isExpanded
+                ? <CaretDown size={12} weight="bold" />
+                : <CaretRight size={12} weight="bold" />}
+            </button>
+          ) : (
+            <span className="w-[28px] shrink-0" aria-hidden="true" />
+          )}
+
+          <FolderSimple
+            size={14}
+            weight={isActive ? 'fill' : 'regular'}
+            className={cn('mr-1.5 shrink-0', isActive ? accentFg : mutedFg)}
+          />
+
           <button
             type="button"
-            onClick={() => onToggle(node.id)}
-            aria-expanded={isExpanded}
-            aria-label={`${isExpanded ? 'Tutup' : 'Buka'} ${node.name}`}
-            className="shrink-0 rounded p-1 text-[var(--muted-foreground)] hover:bg-[var(--sidebar-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            onClick={() => navigate(`/konten/${node.id}`)}
+            className={cn(
+              'flex-1 truncate py-1.5 pr-1 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
+              isActive ? `font-medium ${accentFg}` : 'text-[var(--sidebar-foreground)]',
+            )}
           >
-            {isExpanded
-              ? <CaretDown size={12} weight="bold" />
-              : <CaretRight size={12} weight="bold" />}
+            {node.name}
           </button>
-        ) : (
-          <span className="w-[28px] shrink-0" aria-hidden="true" />
-        )}
 
-        <button
-          type="button"
-          onClick={() => navigate(`/konten/${node.id}`)}
-          className={cn(
-            'flex-1 truncate py-1.5 pr-1 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
-            isActive
-              ? 'font-medium text-[var(--sidebar-accent-foreground)]'
-              : 'text-[var(--sidebar-foreground)]',
+          {canEdit && (
+            <div className="flex shrink-0 items-center gap-0.5 pr-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              <button
+                type="button"
+                aria-label="Ubah nama"
+                onClick={(e) => { e.stopPropagation(); onRenameNode(node, parentId); }}
+                className="rounded p-1 text-[var(--muted-foreground)] hover:bg-[var(--sidebar-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+              >
+                <PencilSimple size={14} />
+              </button>
+              <button
+                type="button"
+                aria-label="Hapus"
+                onClick={(e) => { e.stopPropagation(); onDeleteNode(node, parentId); }}
+                className="rounded p-1 text-[var(--destructive)] hover:bg-[var(--sidebar-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+              >
+                <Trash size={14} />
+              </button>
+            </div>
           )}
-        >
-          {node.name}
-        </button>
-
-        {canEdit && (
-          <div className="flex shrink-0 items-center gap-0.5 pr-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-            <button
-              type="button"
-              aria-label="Ubah nama"
-              onClick={(e) => { e.stopPropagation(); onRenameNode(node, parentId); }}
-              className="rounded p-0.5 text-[var(--muted-foreground)] hover:bg-[var(--sidebar-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-            >
-              <PencilSimple size={11} />
-            </button>
-            <button
-              type="button"
-              aria-label="Hapus"
-              onClick={(e) => { e.stopPropagation(); onDeleteNode(node, parentId); }}
-              className="rounded p-0.5 text-[var(--destructive)] hover:bg-[var(--sidebar-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-            >
-              <Trash size={11} />
-            </button>
-          </div>
-        )}
+        </div>
       </div>
 
       {hasChildren && isExpanded && (
@@ -124,8 +141,9 @@ export function MenuTree({
   canEdit, onRenameNode, onDeleteNode,
 }: MenuTreeProps) {
   if (nodes.length === 0) {
+    if (canEdit) return null;
     return (
-      <p className="px-3 py-2 text-xs text-[var(--muted-foreground)]">Belum ada menu.</p>
+      <p className="py-2 text-xs text-[var(--muted-foreground)]">Belum ada menu.</p>
     );
   }
 

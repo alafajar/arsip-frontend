@@ -8,21 +8,30 @@ export function UserChip() {
 
   if (!user) return null;
 
+  const initial = user.username.charAt(0).toUpperCase();
+
   return (
-    <div className="flex items-center gap-2 border-t border-[var(--sidebar-border)] px-3 py-3">
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm font-medium text-[var(--sidebar-foreground)]">
-          {user.username}
+    <div className="flex items-center justify-between gap-2 border-t border-[var(--sidebar-border)] px-3 py-3">
+      {/* Pill: username + initial avatar */}
+      <button
+        type="button"
+        className="flex cursor-pointer items-center gap-2 rounded-full border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--sidebar-foreground)] transition-colors hover:bg-[var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+      >
+        <span>{user.username}</span>
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--muted)] text-xs font-semibold text-[var(--foreground)]">
+          {initial}
         </span>
-        <span className="text-xs text-[var(--muted-foreground)]">{user.role}</span>
-      </div>
+      </button>
+
+      {/* Logout */}
       <button
         type="button"
         onClick={logout}
-        aria-label="Keluar"
-        className="shrink-0 rounded-[var(--radius)] p-1.5 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+        aria-label="Logout"
+        title="Logout"
+        className="cursor-pointer shrink-0 rounded-[var(--radius)] p-1.5 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
       >
-        <SignOut size={16} />
+        <SignOut size={18} />
       </button>
     </div>
   );
