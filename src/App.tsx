@@ -34,14 +34,18 @@ function HomePage() {
   if (tree && tree.length === 0) {
     return (
       <>
-        <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-          <p className="text-sm font-medium text-[var(--foreground)]">Belum ada map</p>
-          <p className="text-xs text-[var(--muted-foreground)]">
-            Buat map pertama untuk mulai menyimpan berkas.
-          </p>
+        <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--muted)]">
+            <FolderPlus size={28} className="text-[var(--muted-foreground)]" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-base font-semibold text-[var(--foreground)]">Belum ada map</p>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Mulai dengan membuat map pertama Anda.
+            </p>
+          </div>
           {canEdit && (
-            <Button size="sm" onClick={() => setDialogOpen(true)}>
-              <FolderPlus size={14} />
+            <Button onClick={() => setDialogOpen(true)}>
               Buat Map
             </Button>
           )}

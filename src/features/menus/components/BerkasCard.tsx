@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 interface BerkasCardProps {
   name: string;
   viewMode: 'grid' | 'list';
+  uploadedAt?: string;
+  size?: string;
   onClick: () => void;
   canEdit?: boolean;
   onRename?: () => void;
@@ -26,44 +28,50 @@ const actionBtn = (label: string, onClick: () => void, danger?: boolean) => (
   </button>
 );
 
-export function BerkasCard({ name, viewMode, onClick, canEdit, onRename, onDelete }: BerkasCardProps) {
+export function BerkasCard({ name, viewMode, uploadedAt, size, onClick, canEdit, onRename, onDelete }: BerkasCardProps) {
   if (viewMode === 'list') {
     return (
-      <div className="group relative flex items-center hover:bg-[var(--muted)]">
+      <div className="group flex items-center border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--muted)]">
         <button
           type="button"
           onClick={onClick}
           className="flex flex-1 cursor-pointer items-center gap-3 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
         >
-          <FileText size={18} weight="duotone" className="shrink-0 text-[var(--muted-foreground)]" />
-          <span className="text-sm text-[var(--foreground)]">{name}</span>
+          <FileText size={16} weight="duotone" className="shrink-0 text-[var(--muted-foreground)]" />
+          <span className="text-sm font-medium text-[var(--foreground)]">{name}</span>
         </button>
-        {canEdit && onRename && onDelete && (
-          <div className="flex items-center gap-0.5 pr-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-            {actionBtn('Ubah nama', onRename)}
-            {actionBtn('Hapus', onDelete, true)}
-          </div>
-        )}
+        <span className="w-44 shrink-0 text-sm text-[var(--muted-foreground)]">
+          {uploadedAt ? `Diunggah ${uploadedAt}` : '—'}
+        </span>
+        <span className="w-24 shrink-0 text-sm text-[var(--muted-foreground)]">{size ?? '—'}</span>
+        <div className="flex w-16 shrink-0 items-center justify-center">
+          {canEdit && onRename && onDelete && (
+            <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              {actionBtn('Ubah nama', onRename)}
+              {actionBtn('Hapus', onDelete, true)}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="group relative">
+    <div className="group relative overflow-hidden rounded-[var(--radius-lg-val)] border border-[var(--border)] bg-[var(--card)]">
       <button
         type="button"
         onClick={onClick}
-        className={cn(
-          'flex w-full cursor-pointer flex-col items-center gap-2 rounded-[var(--radius-lg-val)]',
-          'border border-[var(--border)] p-4 transition-colors',
-          'hover:border-[var(--ring)] hover:bg-[var(--muted)]',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
-        )}
+        className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
       >
-        <FileText size={32} weight="duotone" className="text-[var(--muted-foreground)]" />
-        <span className="w-full truncate text-center text-sm font-medium text-[var(--foreground)]">
-          {name}
-        </span>
+        <div className="flex h-36 items-center justify-center bg-[var(--muted)]">
+          <FileText size={40} weight="thin" className="text-[var(--muted-foreground)]/50" />
+        </div>
+        <div className="p-3">
+          <p className="truncate text-sm font-medium text-[var(--foreground)]">{name}</p>
+          {uploadedAt && (
+            <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">{uploadedAt}</p>
+          )}
+        </div>
       </button>
       {canEdit && onRename && onDelete && (
         <div className="absolute right-1 top-1 z-10 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">

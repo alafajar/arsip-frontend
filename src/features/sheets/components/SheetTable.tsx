@@ -9,8 +9,9 @@ import { CaretLeft, CaretRight, CircleNotch, PencilSimple, Plus, Trash } from '@
 import type { Column as ApiColumn, SheetRow } from '@/types/api';
 import { useRows } from '@/features/sheets/hooks/useRows';
 import { columnsToColDef } from '@/features/sheets/lib/columns-to-coldef';
+import { cn } from '@/lib/utils';
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
+const PAGE_SIZE = 10;
 
 interface SheetTableProps {
   sheetId: string;
@@ -24,12 +25,32 @@ interface SheetTableProps {
 const ACTION_BTN =
   'rounded p-1 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]';
 
+function paginationRange(current: number, total: number): (number | '…')[] {
+  if (total <= 5) return Array.from({ length: total }, (_, i) => i);
+
+  const result: (number | '…')[] = [0, 1, 2];
+
+  const leftBound = Math.max(3, current - 1);
+  const rightBound = Math.min(total - 3, current + 1);
+
+  if (leftBound > 3) result.push('…');
+  for (let p = leftBound; p <= rightBound; p++) {
+    if (p >= 3 && p < total - 2) result.push(p);
+  }
+  if (rightBound < total - 3) result.push('…');
+
+  for (let i = total - 2; i < total; i++) {
+    if (i >= 0 && !result.includes(i)) result.push(i);
+  }
+
+  return result;
+}
+
 export function SheetTable({ sheetId, columns, editMode, onEditRow, onDeleteRow, onAddRow }: SheetTableProps) {
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState<number>(10);
 
-  const offset = pageIndex * pageSize;
-  const { data, isLoading, isFetching, isError } = useRows(sheetId, pageSize, offset);
+  const offset = pageIndex * PAGE_SIZE;
+  const { data, isLoading, isFetching, isError } = useRows(sheetId, PAGE_SIZE, offset);
 
   const rows: SheetRow[] = data?.rows ?? [];
   const total = data?.total ?? 0;
@@ -57,13 +78,13 @@ export function SheetTable({ sheetId, columns, editMode, onEditRow, onDeleteRow,
     return [...baseColDefs, actionCol];
   }, [baseColDefs, editMode, onEditRow, onDeleteRow]);
 
-  const pageCount = total > 0 ? Math.ceil(total / pageSize) : 1;
+  const pageCount = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
   const table = useReactTable({
     data: rows,
     columns: allColDefs,
     pageCount,
-    state: { pagination: { pageIndex, pageSize } },
+    state: { pagination: { pageIndex, pageSize: PAGE_SIZE } },
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
   });
@@ -72,7 +93,9 @@ export function SheetTable({ sheetId, columns, editMode, onEditRow, onDeleteRow,
   const canPrev = pageIndex > 0;
   const canNext = offset + rows.length < total;
   const showStart = total === 0 ? 0 : offset + 1;
-  const showEnd = Math.min(offset + pageSize, total);
+  const showEnd = Math.min(offset + PAGE_SIZE, total);
+
+  const pages = paginationRange(pageIndex, pageCount);
 
   if (isError) {
     return (
@@ -83,7 +106,7 @@ export function SheetTable({ sheetId, columns, editMode, onEditRow, onDeleteRow,
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <div className="relative overflow-x-auto rounded-[var(--radius-lg-val)] border border-[var(--border)]">
         {isFetching && !isLoading && (
           <div className="absolute right-3 top-3 z-10">
@@ -100,7 +123,7 @@ export function SheetTable({ sheetId, columns, editMode, onEditRow, onDeleteRow,
                     key={header.id}
                     colSpan={header.colSpan}
                     scope={header.colSpan > 1 ? 'colgroup' : 'col'}
-                    className="border-b border-r border-[var(--border)] px-3 py-2 text-left text-xs font-semibold text-[var(--muted-foreground)] last:border-r-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                    className="border-b border-r border-[var(--border)] px-3 py-2 text-center text-xs font-semibold text-[var(--muted-foreground)] last:border-r-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                   >
                     {header.isPlaceholder
                       ? null
@@ -150,7 +173,7 @@ export function SheetTable({ sheetId, columns, editMode, onEditRow, onDeleteRow,
             <button
               type="button"
               onClick={onAddRow}
-              className="flex items-center gap-1.5 text-xs text-[var(--primary)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] rounded"
+              className="flex items-center gap-1.5 rounded text-xs text-[var(--primary)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
             >
               <Plus size={13} />
               Tambah baris
@@ -161,36 +184,51 @@ export function SheetTable({ sheetId, columns, editMode, onEditRow, onDeleteRow,
 
       {/* Pagination */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted-foreground)]">
-        <span>
-          {isLoading ? 'Memuat…' : `Menampilkan ${showStart}–${showEnd} dari ${total}`}
+        <span className="text-xs">
+          {isLoading ? 'Memuat…' : `Menampilkan ${showStart}-${showEnd} dari ${total} data`}
         </span>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <label htmlFor="pageSize" className="text-xs">Baris per halaman</label>
-            <select
-              id="pageSize"
-              value={pageSize}
-              onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(0); }}
-              className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-xs text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-            >
-              {PAGE_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setPageIndex((p) => p - 1)}
-              disabled={!canPrev || isLoading} aria-label="Halaman sebelumnya"
-              className="flex items-center rounded-[var(--radius)] border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]">
-              <CaretLeft size={12} />
-            </button>
-            <span className="min-w-[4rem] text-center text-xs">
-              {isLoading ? '—' : `${pageIndex + 1} / ${pageCount}`}
-            </span>
-            <button type="button" onClick={() => setPageIndex((p) => p + 1)}
-              disabled={!canNext || isLoading} aria-label="Halaman berikutnya"
-              className="flex items-center rounded-[var(--radius)] border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]">
-              <CaretRight size={12} />
-            </button>
-          </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setPageIndex((p) => p - 1)}
+            disabled={!canPrev || isLoading}
+            aria-label="Halaman sebelumnya"
+            className="flex items-center gap-1 rounded-[var(--radius)] border border-[var(--border)] px-2.5 py-1 text-xs hover:bg-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+          >
+            <CaretLeft size={12} /> Previous
+          </button>
+
+          {!isLoading && pages.map((p, i) =>
+            p === '…' ? (
+              <span key={`ellipsis-${i}`} className="px-1 text-xs text-[var(--muted-foreground)]">…</span>
+            ) : (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPageIndex(p as number)}
+                aria-current={p === pageIndex ? 'page' : undefined}
+                className={cn(
+                  'min-w-[28px] rounded-[var(--radius)] border px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
+                  p === pageIndex
+                    ? 'border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]'
+                    : 'border-[var(--border)] hover:bg-[var(--muted)]',
+                )}
+              >
+                {(p as number) + 1}
+              </button>
+            ),
+          )}
+
+          <button
+            type="button"
+            onClick={() => setPageIndex((p) => p + 1)}
+            disabled={!canNext || isLoading}
+            aria-label="Halaman berikutnya"
+            className="flex items-center gap-1 rounded-[var(--radius)] border border-[var(--border)] px-2.5 py-1 text-xs hover:bg-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+          >
+            Next <CaretRight size={12} />
+          </button>
         </div>
       </div>
     </div>
