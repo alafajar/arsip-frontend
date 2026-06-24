@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MagnifyingGlass, SquaresFour, List, SortAscending, SortDescending, FolderPlus } from '@phosphor-icons/react';
+import { MagnifyingGlass, SquaresFour, List, SortAscending, SortDescending, FolderPlus, CloudArrowUp } from '@phosphor-icons/react';
 import { useMenuTree } from '@/features/menus/hooks/useMenuTree';
 import { findNodeById, getAncestorPath } from '@/features/menus/lib/find-node';
 import { Breadcrumb } from '@/features/menus/components/Breadcrumb';
 import { MapCard } from '@/features/menus/components/MapCard';
 import { BerkasCard } from '@/features/menus/components/BerkasCard';
 import { CreateMapDialog } from '@/features/menus/components/CreateMapDialog';
+import { UploadDialog } from '@/features/imports/components/UploadDialog';
 import { useCanEdit } from '@/features/auth/hooks/useCanEdit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,7 @@ export default function ContentPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   const node = useMemo(
     () => (menuId && tree ? findNodeById(tree, menuId) : undefined),
@@ -115,10 +117,16 @@ export default function ContentPage() {
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-[var(--foreground)]">{node.name}</h1>
         {canEdit && (
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <FolderPlus size={14} />
-            Tambah Map
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setUploadOpen(true)}>
+              <CloudArrowUp size={14} />
+              Unggah Berkas
+            </Button>
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <FolderPlus size={14} />
+              Tambah Map
+            </Button>
+          </div>
         )}
       </div>
 
@@ -239,6 +247,12 @@ export default function ContentPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         parentId={menuId ?? null}
+      />
+
+      <UploadDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        parentMenuId={menuId ?? ''}
       />
     </div>
   );
