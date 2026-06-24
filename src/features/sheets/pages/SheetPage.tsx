@@ -1,12 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CaretRight } from '@phosphor-icons/react';
 import { useSheet } from '@/features/sheets/hooks/useSheet';
 import { useColumns } from '@/features/sheets/hooks/useColumns';
 import { useMenuTree } from '@/features/menus/hooks/useMenuTree';
+import { useCanEdit } from '@/features/auth/hooks/useCanEdit';
 import { getAncestorPath } from '@/features/menus/lib/find-node';
 import { SheetTable } from '@/features/sheets/components/SheetTable';
+import { RowFormDialog } from '@/features/sheets/components/RowFormDialog';
+import { DeleteRowDialog } from '@/features/sheets/components/DeleteRowDialog';
 import { Button } from '@/components/ui/button';
+import type { SheetRow } from '@/types/api';
 
 const LINK_CLASS =
   'rounded transition-colors hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]';
@@ -17,12 +21,19 @@ export default function SheetPage() {
   const { data: sheet, isLoading: sheetLoading, isError: sheetError } = useSheet(sheetId!);
   const { data: columns, isLoading: colLoading, isError: colError } = useColumns(sheetId!);
   const { data: tree } = useMenuTree();
+  const canEdit = useCanEdit();
 
-  // Ancestor menu nodes for breadcrumb — uses cached menu tree, no extra request
+  const [editMode, setEditMode] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'add' | 'edit' | null>(null);
+  const [editRow, setEditRow] = useState<SheetRow | null>(null);
+  const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
+
   const ancestorPath = useMemo(
     () => (tree && sheet ? getAncestorPath(tree, sheet.menuItem.id) : []),
     [tree, sheet],
   );
+
+  const canWrite = canEdit && !!sheet && !sheet.isReadOnly;
 
   if (sheetLoading) {
     return (
@@ -42,14 +53,16 @@ export default function SheetPage() {
     );
   }
 
+  const handleEditRow = (row: SheetRow) => { setEditRow(row); setDialogMode('edit'); };
+  const handleDeleteRow = (rowId: string) => setDeleteRowId(rowId);
+  const handleAddRow = () => { setEditRow(null); setDialogMode('add'); };
+
   return (
     <div className="flex flex-col gap-6 p-8">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-1 text-sm text-[var(--muted-foreground)]">
-          <li>
-            <Link to="/" className={LINK_CLASS}>Konten</Link>
-          </li>
+          <li><Link to="/" className={LINK_CLASS}>Konten</Link></li>
           {ancestorPath.map((node) => (
             <li key={node.id} className="flex items-center gap-1">
               <CaretRight size={12} aria-hidden="true" />
@@ -68,10 +81,19 @@ export default function SheetPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-[var(--foreground)]">{sheet.name}</h1>
-        {/* Placeholder — edit actions wired in FE-009 */}
-        <Button variant="outline" size="sm" disabled>
-          Ubah Detail
-        </Button>
+        {canWrite && (
+          editMode
+            ? (
+              <Button size="sm" onClick={() => setEditMode(false)}>
+                Selesai
+              </Button>
+            )
+            : (
+              <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
+                Ubah Detail
+              </Button>
+            )
+        )}
       </div>
 
       {/* Table */}
@@ -83,12 +105,35 @@ export default function SheetPage() {
           ))}
         </div>
       ) : colError ? (
-        <p className="py-8 text-center text-sm text-[var(--destructive)]">
-          Gagal memuat kolom.
-        </p>
+        <p className="py-8 text-center text-sm text-[var(--destructive)]">Gagal memuat kolom.</p>
       ) : (
-        <SheetTable sheetId={sheetId!} columns={columns ?? []} />
+        <SheetTable
+          sheetId={sheetId!}
+          columns={columns ?? []}
+          editMode={editMode}
+          onEditRow={handleEditRow}
+          onDeleteRow={handleDeleteRow}
+          onAddRow={handleAddRow}
+        />
       )}
+
+      {/* Dialogs */}
+      {columns && (
+        <RowFormDialog
+          open={dialogMode !== null}
+          onOpenChange={(open) => { if (!open) setDialogMode(null); }}
+          mode={dialogMode ?? 'add'}
+          sheetId={sheetId!}
+          columns={columns}
+          row={editRow ?? undefined}
+        />
+      )}
+      <DeleteRowDialog
+        open={deleteRowId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteRowId(null); }}
+        sheetId={sheetId!}
+        rowId={deleteRowId}
+      />
     </div>
   );
 }

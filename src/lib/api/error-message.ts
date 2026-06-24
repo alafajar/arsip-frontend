@@ -12,5 +12,9 @@ export function getErrorMessage(err: unknown, fallback = FALLBACK): string {
     return hasMessage ? serverMessage : 'Anda tidak berhak melakukan aksi ini.';
   }
 
+  if (err.response?.status === 409) {
+    return hasMessage ? serverMessage : 'Sheet ini tidak dapat diubah (read-only).';
+  }
+
   return hasMessage ? serverMessage : fallback;
 }
