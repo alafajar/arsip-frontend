@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { CaretRight, CaretDown } from '@phosphor-icons/react';
+import { CaretRight, CaretDown, PencilSimple, Trash } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import type { MenuNode } from '@/types/api';
 
@@ -9,9 +9,16 @@ interface NodeProps {
   expandedIds: Set<string>;
   onToggle: (id: string) => void;
   depth: number;
+  parentId: string | null;
+  canEdit: boolean;
+  onRenameNode: (node: MenuNode, parentId: string | null) => void;
+  onDeleteNode: (node: MenuNode, parentId: string | null) => void;
 }
 
-function MenuNodeItem({ node, activeMenuId, expandedIds, onToggle, depth }: NodeProps) {
+function MenuNodeItem({
+  node, activeMenuId, expandedIds, onToggle, depth,
+  parentId, canEdit, onRenameNode, onDeleteNode,
+}: NodeProps) {
   const navigate = useNavigate();
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedIds.has(node.id);
@@ -21,10 +28,8 @@ function MenuNodeItem({ node, activeMenuId, expandedIds, onToggle, depth }: Node
     <li>
       <div
         className={cn(
-          'flex items-center rounded-[var(--radius)]',
-          isActive
-            ? 'bg-[var(--sidebar-accent)]'
-            : 'hover:bg-[var(--muted)]',
+          'group flex items-center rounded-[var(--radius)]',
+          isActive ? 'bg-[var(--sidebar-accent)]' : 'hover:bg-[var(--muted)]',
         )}
         style={{ paddingLeft: `${depth * 0.75}rem` }}
       >
@@ -38,8 +43,7 @@ function MenuNodeItem({ node, activeMenuId, expandedIds, onToggle, depth }: Node
           >
             {isExpanded
               ? <CaretDown size={12} weight="bold" />
-              : <CaretRight size={12} weight="bold" />
-            }
+              : <CaretRight size={12} weight="bold" />}
           </button>
         ) : (
           <span className="w-[28px] shrink-0" aria-hidden="true" />
@@ -49,7 +53,7 @@ function MenuNodeItem({ node, activeMenuId, expandedIds, onToggle, depth }: Node
           type="button"
           onClick={() => navigate(`/konten/${node.id}`)}
           className={cn(
-            'flex-1 truncate py-1.5 pr-2 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
+            'flex-1 truncate py-1.5 pr-1 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
             isActive
               ? 'font-medium text-[var(--sidebar-accent-foreground)]'
               : 'text-[var(--sidebar-foreground)]',
@@ -57,6 +61,27 @@ function MenuNodeItem({ node, activeMenuId, expandedIds, onToggle, depth }: Node
         >
           {node.name}
         </button>
+
+        {canEdit && (
+          <div className="flex shrink-0 items-center gap-0.5 pr-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+            <button
+              type="button"
+              aria-label="Ubah nama"
+              onClick={(e) => { e.stopPropagation(); onRenameNode(node, parentId); }}
+              className="rounded p-0.5 text-[var(--muted-foreground)] hover:bg-[var(--sidebar-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            >
+              <PencilSimple size={11} />
+            </button>
+            <button
+              type="button"
+              aria-label="Hapus"
+              onClick={(e) => { e.stopPropagation(); onDeleteNode(node, parentId); }}
+              className="rounded p-0.5 text-[var(--destructive)] hover:bg-[var(--sidebar-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            >
+              <Trash size={11} />
+            </button>
+          </div>
+        )}
       </div>
 
       {hasChildren && isExpanded && (
@@ -72,6 +97,10 @@ function MenuNodeItem({ node, activeMenuId, expandedIds, onToggle, depth }: Node
                 expandedIds={expandedIds}
                 onToggle={onToggle}
                 depth={depth + 1}
+                parentId={node.id}
+                canEdit={canEdit}
+                onRenameNode={onRenameNode}
+                onDeleteNode={onDeleteNode}
               />
             ))}
         </ul>
@@ -85,9 +114,15 @@ interface MenuTreeProps {
   activeMenuId: string | null;
   expandedIds: Set<string>;
   onToggle: (id: string) => void;
+  canEdit: boolean;
+  onRenameNode: (node: MenuNode, parentId: string | null) => void;
+  onDeleteNode: (node: MenuNode, parentId: string | null) => void;
 }
 
-export function MenuTree({ nodes, activeMenuId, expandedIds, onToggle }: MenuTreeProps) {
+export function MenuTree({
+  nodes, activeMenuId, expandedIds, onToggle,
+  canEdit, onRenameNode, onDeleteNode,
+}: MenuTreeProps) {
   if (nodes.length === 0) {
     return (
       <p className="px-3 py-2 text-xs text-[var(--muted-foreground)]">Belum ada menu.</p>
@@ -106,6 +141,10 @@ export function MenuTree({ nodes, activeMenuId, expandedIds, onToggle }: MenuTre
           expandedIds={expandedIds}
           onToggle={onToggle}
           depth={0}
+          parentId={null}
+          canEdit={canEdit}
+          onRenameNode={onRenameNode}
+          onDeleteNode={onDeleteNode}
         />
       ))}
     </ul>

@@ -13,3 +13,15 @@ export const createMenu = async (body: {
   const { data } = await client.post<MenuNode>('/menus', body);
   return data;
 };
+
+export const renameMenu = async (
+  id: string,
+  body: { name: string; parentId: string | null },
+): Promise<MenuNode> => {
+  const { data } = await client.patch<MenuNode>(`/menus/${id}`, body);
+  return data;
+};
+
+export const deleteMenu = async (id: string): Promise<void> => {
+  await client.delete(`/menus/${id}`);
+};

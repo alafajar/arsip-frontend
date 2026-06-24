@@ -120,6 +120,33 @@ Internal". Di Sprint 1 dekoratif (state lokal saja, tanpa filter API).
 
 ---
 
+## 10. Rename & Delete Berkas (Sheet)
+
+**Fitur:** Aksi pensil (ubah nama) dan trash (hapus) pada Berkas card/baris di ContentPage.
+Di Sprint 1 aksi ini non-fungsional: klik menampilkan toast "Sprint 2" tanpa menyentuh data.
+Kode mock ditandai `// MOCK(sprint2)` di `src/features/menus/pages/ContentPage.tsx`.
+
+**Endpoint dibutuhkan:**
+- `PATCH /sheets/:id` — ubah nama sheet; body: `{ name: string }`
+- `DELETE /sheets/:id` — hapus sheet beserta seluruh baris dan kolomnya
+
+**Bentuk data (usulan):**
+```ts
+// PATCH /sheets/:id — request body
+{ name: string }
+
+// PATCH /sheets/:id — response
+SheetMeta  // (tipe sudah ada di src/types/api.ts)
+
+// DELETE /sheets/:id — response
+void (204)
+```
+
+**Catatan:** Saat ini import `.xlsx` dapat menumpuk sheet tanpa cara menghapusnya dari UI.
+Endpoint ini wajib untuk mengelola siklus hidup sheet.
+
+---
+
 ## 9. Render Setia Grid-mirror (Read-only) Sheet — Ekspos CellMerge
 
 **Fitur:** Render setia sheet grid-mirror (`isReadOnly: true`, hasil import `.xlsx` apa adanya) —
