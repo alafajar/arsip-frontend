@@ -35,12 +35,22 @@ export interface MenuNode {
 // 7 tipe kolom backend: TEXT, INTEGER, FLOAT, DATE, BOOLEAN, MARKING, URL
 export type ColumnType = 'TEXT' | 'INTEGER' | 'FLOAT' | 'DATE' | 'BOOLEAN' | 'MARKING' | 'URL';
 
+// Rentang merge sel untuk sheet grid-mirror (isReadOnly). Koordinat 1-based,
+// SELARAS dengan SheetRow.orderIndex (baris) dan Column.orderIndex (kolom) —
+// backend sudah menormalkan dari koordinat Excel absolut ke relatif saat import.
+export interface CellMerge {
+  startRow: number;
+  endRow: number;
+  startCol: number;
+  endCol: number;
+}
 export interface SheetMeta {
   id: string;
   name: string;
   orderIndex: number;
   isReadOnly: boolean;
   menuItem: { id: string; name: string };
+  merges?: CellMerge[]; // HANYA dikirim untuk sheet grid-mirror (isReadOnly)
 }
 export interface Column {
   id: string;

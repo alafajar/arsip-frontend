@@ -10,6 +10,10 @@ const EMPTY = <span className="text-[var(--muted-foreground)]">—</span>;
 export function CellRenderer({ value, type }: CellRendererProps) {
   if (value === null || value === '') return EMPTY;
 
+  // Guard defensif: kontrak API menjamin cell SELALU string|null, tapi data lama
+  // hasil import sebelum fix backend bisa menyimpan objek → cegah "[object Object]".
+  if (typeof value !== 'string') return EMPTY;
+
   if (type === 'URL') {
     return (
       <a

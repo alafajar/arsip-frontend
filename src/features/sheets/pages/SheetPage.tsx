@@ -7,6 +7,7 @@ import { useMenuTree } from '@/features/menus/hooks/useMenuTree';
 import { useCanEdit } from '@/features/auth/hooks/useCanEdit';
 import { getAncestorPath } from '@/features/menus/lib/find-node';
 import { SheetTable } from '@/features/sheets/components/SheetTable';
+import { GridMirrorTable } from '@/features/sheets/components/GridMirrorTable';
 import { RowFormDialog } from '@/features/sheets/components/RowFormDialog';
 import { DeleteRowDialog } from '@/features/sheets/components/DeleteRowDialog';
 import { Button } from '@/components/ui/button';
@@ -125,6 +126,13 @@ export default function SheetPage() {
           </div>
         ) : colError ? (
           <p className="py-8 text-center text-sm text-[var(--destructive)]">Gagal memuat kolom.</p>
+        ) : sheet.isReadOnly ? (
+          // Grid-mirror (hasil import .xlsx apa adanya): render setia dengan merge bertingkat.
+          <GridMirrorTable
+            sheetId={sheetId!}
+            columns={columns ?? []}
+            merges={sheet.merges ?? []}
+          />
         ) : (
           <SheetTable
             sheetId={sheetId!}

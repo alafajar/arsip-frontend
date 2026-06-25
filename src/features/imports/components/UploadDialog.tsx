@@ -36,6 +36,7 @@ export function UploadDialog({ open, onOpenChange, parentMenuId }: UploadDialogP
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFile(null);
       setName('');
       setRejectionMsg(null);
@@ -64,7 +65,10 @@ export function UploadDialog({ open, onOpenChange, parentMenuId }: UploadDialogP
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
-    mutate({ file, name: name.trim() || undefined, parentMenuId });
+    mutate(
+      { file, name: name.trim() || undefined, parentMenuId },
+      { onSuccess: () => onOpenChange(false) },
+    );
   };
 
   const handleOpenChange = (next: boolean) => {
